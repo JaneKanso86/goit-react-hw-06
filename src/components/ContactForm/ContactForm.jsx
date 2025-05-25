@@ -1,64 +1,49 @@
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import { useId } from 'react';
+import { useDispatch } from 'react-redux';
 import css from './ContactForm.module.css';
-import * as Yup from 'yup';
-import { nanoid } from 'nanoid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { addContact } from '../../redux/contactsSlice';
 
-const ContactSchema = Yup.object().shape({
-  name: Yup.string()
-    .min(3, 'Too short!')
-    .max(50, 'Too long!')
-    .required('Required'),
-  number: Yup.string()
-    .min(3, 'Too short!')
-    .max(50, 'Too long!')
-    .required('Required'),
-});
+export default function ContactForm() {
+  const dispatch = useDispatch();
 
-export default function ContactForm({ onAdd }) {
-  const nameFieldId = useId();
-  const numberFieldId = useId();
+  const handleSubmit = (evt) => {
+    evt.preventDefault();
 
-  const handleSubmit = (values, actions) => {
-    onAdd({
-      id: nanoid(),
-      name: values.name,
-      number: values.number,
-    });
-    actions.resetForm();
+    const form = evt.target;
+    if (
+      form.elements.name.value.trim() == '' ||
+      form.elements.number.value.trim() == ''
+    ) {
+      toast.error('Please fill both fields.');
+      return;
+    }
+
+    dispatch(
+      addContact({
+        id: crypto.randomUUID(),
+        name: form.elements.name.value,
+        number: form.elements.number.value,
+      }),
+    );
+    form.reset();
   };
 
   return (
     <div className={css.card}>
-      <Formik
-        initialValues={{ name: '', number: '' }}
-        validationSchema={ContactSchema}
-        onSubmit={handleSubmit}
-      >
-        <Form className={css.form}>
-          <label htmlFor={nameFieldId}>Name</label>
-          <Field
-            type="text"
-            name="name"
-            id={nameFieldId}
-            className={css.field}
-          />
-          <ErrorMessage name="name" component="div" className={css.error} />
+      <form className={css.form} onSubmit={handleSubmit}>
+        <label htmlFor="name">Name</label>
+        <input type="text" name="name" id="name" className={css.field} />
 
-          <label htmlFor={numberFieldId}>Number</label>
-          <Field
-            type="text"
-            name="number"
-            id={numberFieldId}
-            className={css.field}
-          />
-          <ErrorMessage name="number" component="div" className={css.error} />
+        <label htmlFor="number">Number</label>
+        <input type="text" name="number" id="number" className={css.field} />
 
-          <button type="submit" className={css.button}>
-            Add contact
-          </button>
-        </Form>
-      </Formik>
+        <button type="submit" className={css.button}>
+          Add contact
+        </button>
+      </form>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }
